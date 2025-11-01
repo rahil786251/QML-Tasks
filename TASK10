@@ -1,0 +1,488 @@
+
+Open In Colab
+TASK 10: Quantum Approximate Optimization Algorithm (QAOA)
+Aim
+To implement the Quantum Approximate Optimization Algorithm (QAOA) using Qiskit and PyTorch to solve the Max-Cut problem, a classical NP-hard combinatorial optimization problem.
+
+1. Mathematical Model of the QAOA Algorithm
+1.1 Max-Cut Problem Formulation
+Given a graph 
+ with a weighted adjacency matrix 
+, the Max-Cut objective is defined as:
+
+where 
+ indicates the partition of node 
+.
+The goal is to maximize 
+.
+
+1.2 QAOA Ansatz
+The QAOA prepares a quantum state parameterized by angles 
+ and 
+:
+
+where:
+
+ is the cost Hamiltonian.
+ is the mixer Hamiltonian.
+1.3 Expectation Value
+The objective function to maximize is the expected value of the cost Hamiltonian:
+
+A classical optimizer (such as Adam) updates 
+ and 
+ iteratively to maximize 
+.
+
+2. Algorithm – QAOA for the Max-Cut Problem
+Graph Construction
+
+Define the adjacency matrix 
+.
+Construct the graph using the NetworkX library for visualization.
+Classical Baseline
+
+Compute the optimal Max-Cut value via brute-force enumeration to serve as the ground truth.
+QAOA Circuit Construction
+
+Initialize all qubits in the state 
+.
+Apply alternating cost and mixer unitaries for 
+ layers.
+The cost unitary uses controlled-Z rotations to implement 
+ interactions.
+Expectation Calculation
+
+Simulate the circuit using Qiskit Aer’s statevector simulator.
+Compute the expected cut value from the measurement probabilities.
+Hybrid Optimization
+
+Initialize parameters 
+ randomly.
+Use finite-difference gradients for parameter updates.
+Optimize using PyTorch’s Adam optimizer to maximize the expectation.
+Circuit Visualization
+
+Display both initial and optimized QAOA circuits using qiskit.visualization.
+
+!pip install qiskit qiskit-optimization torch networkx numpy
+!pip install qiskit-aer
+!pip install pylatexenc
+     
+Collecting qiskit
+  Downloading qiskit-2.2.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (12 kB)
+Collecting qiskit-optimization
+  Downloading qiskit_optimization-0.7.0-py3-none-any.whl.metadata (9.4 kB)
+Requirement already satisfied: torch in /usr/local/lib/python3.12/dist-packages (2.8.0+cu126)
+Requirement already satisfied: networkx in /usr/local/lib/python3.12/dist-packages (3.5)
+Requirement already satisfied: numpy in /usr/local/lib/python3.12/dist-packages (2.0.2)
+Collecting rustworkx>=0.15.0 (from qiskit)
+  Downloading rustworkx-0.17.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (10 kB)
+Requirement already satisfied: scipy>=1.5 in /usr/local/lib/python3.12/dist-packages (from qiskit) (1.16.2)
+Requirement already satisfied: dill>=0.3 in /usr/local/lib/python3.12/dist-packages (from qiskit) (0.3.8)
+Collecting stevedore>=3.0.0 (from qiskit)
+  Downloading stevedore-5.5.0-py3-none-any.whl.metadata (2.2 kB)
+Requirement already satisfied: typing-extensions in /usr/local/lib/python3.12/dist-packages (from qiskit) (4.15.0)
+Collecting docplex!=2.24.231,>=2.21.207 (from qiskit-optimization)
+  Downloading docplex-2.30.251.tar.gz (646 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 646.5/646.5 kB 6.7 MB/s eta 0:00:00
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Installing backend dependencies ... done
+  Preparing metadata (pyproject.toml) ... done
+Requirement already satisfied: setuptools>=40.1.0 in /usr/local/lib/python3.12/dist-packages (from qiskit-optimization) (75.2.0)
+Requirement already satisfied: filelock in /usr/local/lib/python3.12/dist-packages (from torch) (3.19.1)
+Requirement already satisfied: sympy>=1.13.3 in /usr/local/lib/python3.12/dist-packages (from torch) (1.13.3)
+Requirement already satisfied: jinja2 in /usr/local/lib/python3.12/dist-packages (from torch) (3.1.6)
+Requirement already satisfied: fsspec in /usr/local/lib/python3.12/dist-packages (from torch) (2025.3.0)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.77)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.77)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.6.80 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.80)
+Requirement already satisfied: nvidia-cudnn-cu12==9.10.2.21 in /usr/local/lib/python3.12/dist-packages (from torch) (9.10.2.21)
+Requirement already satisfied: nvidia-cublas-cu12==12.6.4.1 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.4.1)
+Requirement already satisfied: nvidia-cufft-cu12==11.3.0.4 in /usr/local/lib/python3.12/dist-packages (from torch) (11.3.0.4)
+Requirement already satisfied: nvidia-curand-cu12==10.3.7.77 in /usr/local/lib/python3.12/dist-packages (from torch) (10.3.7.77)
+Requirement already satisfied: nvidia-cusolver-cu12==11.7.1.2 in /usr/local/lib/python3.12/dist-packages (from torch) (11.7.1.2)
+Requirement already satisfied: nvidia-cusparse-cu12==12.5.4.2 in /usr/local/lib/python3.12/dist-packages (from torch) (12.5.4.2)
+Requirement already satisfied: nvidia-cusparselt-cu12==0.7.1 in /usr/local/lib/python3.12/dist-packages (from torch) (0.7.1)
+Requirement already satisfied: nvidia-nccl-cu12==2.27.3 in /usr/local/lib/python3.12/dist-packages (from torch) (2.27.3)
+Requirement already satisfied: nvidia-nvtx-cu12==12.6.77 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.77)
+Requirement already satisfied: nvidia-nvjitlink-cu12==12.6.85 in /usr/local/lib/python3.12/dist-packages (from torch) (12.6.85)
+Requirement already satisfied: nvidia-cufile-cu12==1.11.1.6 in /usr/local/lib/python3.12/dist-packages (from torch) (1.11.1.6)
+Requirement already satisfied: triton==3.4.0 in /usr/local/lib/python3.12/dist-packages (from torch) (3.4.0)
+Requirement already satisfied: six in /usr/local/lib/python3.12/dist-packages (from docplex!=2.24.231,>=2.21.207->qiskit-optimization) (1.17.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.12/dist-packages (from sympy>=1.13.3->torch) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.12/dist-packages (from jinja2->torch) (3.0.2)
+Downloading qiskit-2.2.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.0/8.0 MB 72.0 MB/s eta 0:00:00
+Downloading qiskit_optimization-0.7.0-py3-none-any.whl (237 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 237.1/237.1 kB 19.2 MB/s eta 0:00:00
+Downloading rustworkx-0.17.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 70.9 MB/s eta 0:00:00
+Downloading stevedore-5.5.0-py3-none-any.whl (49 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 49.5/49.5 kB 4.0 MB/s eta 0:00:00
+Building wheels for collected packages: docplex
+  Building wheel for docplex (pyproject.toml) ... done
+  Created wheel for docplex: filename=docplex-2.30.251-py3-none-any.whl size=685954 sha256=54fef53a984a7445cd4103cb3aa48fe6d907d17b60e4caf862c203374378694c
+  Stored in directory: /root/.cache/pip/wheels/c1/d9/5c/1d919b1e441ebbaff244513a13d09c3c0378401601d4184bb0
+Successfully built docplex
+Installing collected packages: stevedore, rustworkx, docplex, qiskit, qiskit-optimization
+Successfully installed docplex-2.30.251 qiskit-2.2.0 qiskit-optimization-0.7.0 rustworkx-0.17.1 stevedore-5.5.0
+Collecting qiskit-aer
+  Downloading qiskit_aer-0.17.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (8.3 kB)
+Requirement already satisfied: qiskit>=1.1.0 in /usr/local/lib/python3.12/dist-packages (from qiskit-aer) (2.2.0)
+Requirement already satisfied: numpy>=1.16.3 in /usr/local/lib/python3.12/dist-packages (from qiskit-aer) (2.0.2)
+Requirement already satisfied: scipy>=1.0 in /usr/local/lib/python3.12/dist-packages (from qiskit-aer) (1.16.2)
+Requirement already satisfied: psutil>=5 in /usr/local/lib/python3.12/dist-packages (from qiskit-aer) (5.9.5)
+Requirement already satisfied: python-dateutil>=2.8.0 in /usr/local/lib/python3.12/dist-packages (from qiskit-aer) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.8.0->qiskit-aer) (1.17.0)
+Requirement already satisfied: rustworkx>=0.15.0 in /usr/local/lib/python3.12/dist-packages (from qiskit>=1.1.0->qiskit-aer) (0.17.1)
+Requirement already satisfied: dill>=0.3 in /usr/local/lib/python3.12/dist-packages (from qiskit>=1.1.0->qiskit-aer) (0.3.8)
+Requirement already satisfied: stevedore>=3.0.0 in /usr/local/lib/python3.12/dist-packages (from qiskit>=1.1.0->qiskit-aer) (5.5.0)
+Requirement already satisfied: typing-extensions in /usr/local/lib/python3.12/dist-packages (from qiskit>=1.1.0->qiskit-aer) (4.15.0)
+Downloading qiskit_aer-0.17.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 63.3 MB/s eta 0:00:00
+Installing collected packages: qiskit-aer
+Successfully installed qiskit-aer-0.17.2
+Collecting pylatexenc
+  Downloading pylatexenc-2.10.tar.gz (162 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 162.6/162.6 kB 3.5 MB/s eta 0:00:00
+  Preparing metadata (setup.py) ... done
+Building wheels for collected packages: pylatexenc
+  Building wheel for pylatexenc (setup.py) ... done
+  Created wheel for pylatexenc: filename=pylatexenc-2.10-py3-none-any.whl size=136817 sha256=851c8a9d1a36ccf0b75c16182f05953bea67d81b532316aa50eb65fcc40fb544
+  Stored in directory: /root/.cache/pip/wheels/06/3e/78/fa1588c1ae991bbfd814af2bcac6cef7a178beee1939180d46
+Successfully built pylatexenc
+Installing collected packages: pylatexenc
+Successfully installed pylatexenc-2.10
+
+import os
+import numpy as np
+import networkx as nx
+import torch
+from qiskit import QuantumCircuit
+from qiskit_aer import Aer
+from qiskit.quantum_info import Statevector
+from qiskit_optimization.applications import Maxcut
+from qiskit_optimization.problems import QuadraticProgram
+# Visualization imports
+import matplotlib
+# Use Agg backend in headless environments so saving works even without GUI
+matplotlib.use(os.environ.get("MPLBACKEND", "Agg"))
+import matplotlib.pyplot as plt
+
+
+# -------------------------
+# Problem definition
+# -------------------------
+def make_graph():
+    # Example: 4-node graph (same as Qiskit tutorial)
+    w = np.array([
+        [0.0, 1.0, 1.0, 0.0],
+        [1.0, 0.0, 1.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [0.0, 1.0, 1.0, 0.0]
+    ])
+    G = nx.from_numpy_array(w)
+    return G, w
+
+
+# computes classical objective (cut value) for bitstring x (array of 0/1)
+def objective_value(x, w):
+    X = np.outer(x, (1 - x))
+    w_01 = np.where(w != 0, 1, 0)
+    return np.sum(w_01 * X)
+
+
+# brute-force best solution (for comparison)
+def brute_force_maxcut(w):
+    n = w.shape[0]
+    best = -1
+    best_x = None
+    for i in range(2**n):
+        x = np.array(list(map(int, np.binary_repr(i, width=n))))
+        val = objective_value(x, w)
+        if val > best:
+            best = val
+            best_x = x
+    return best_x, best
+
+
+# -------------------------
+# Build QAOA circuit (manual)
+# -------------------------
+def qaoa_circuit(n_qubits, edges, gammas, betas):
+    """
+    Build QAOA circuit:
+    - start in |+>^n
+    - for each layer l:
+      cost unitary U_C(gamma_l) = exp(-i * gamma_l * C)
+      mixer U_B(beta_l) = product Rx(2*beta_l)
+    edges: list of tuples (i, j, weight)
+    gammas, betas: lists or 1D arrays (length p)
+    """
+    p = len(gammas)
+    qc = QuantumCircuit(n_qubits)
+    # initial layer: Hadamards to create |+>^n
+    qc.h(range(n_qubits))
+    for layer in range(p):
+        gamma = float(gammas[layer])
+        # cost layer: implement exp(-i * gamma * w_ij * Z_i Z_j)
+        for (i, j, w) in edges:
+            if w == 0:
+                continue
+            # For ZZ interaction exp(-i * theta/2 * Z_i Z_j) ->
+            # use CNOT-RZ-CNOT with theta = 2*gamma*w
+            theta = 2.0 * gamma * w
+            qc.cx(i, j)
+            qc.rz(theta, j)
+            qc.cx(i, j)
+        # mixer layer: RX(2*beta)
+        beta = float(betas[layer])
+        for q in range(n_qubits):
+            qc.rx(2.0 * beta, q)
+    return qc
+
+
+# -------------------------
+# Expectation value from statevector
+# -------------------------
+def expectation_from_statevector(statevector, w):
+    """Given a statevector and adjacency matrix w, compute
+    expected MaxCut objective."""
+    n = w.shape[0]
+    probs = Statevector(statevector).probabilities_dict()
+    exp_val = 0.0
+    for bitstr, p in probs.items():
+        # reverse so index 0 => qubit 0
+        bits = np.array([int(b) for b in bitstr[::-1]])
+        exp_val += objective_value(bits, w) * p
+    return exp_val
+
+
+# -------------------------
+# QAOA + PyTorch classical loop
+# -------------------------
+def run_qaoa_with_pytorch(w, p=1, init_std=0.5, maxiter=100,
+                          lr=0.1, finite_diff_eps=1e-3,
+                          backend_name="aer_simulator_statevector"):
+    n = w.shape[0]
+    # edges list with weights (i>j to match earlier convention)
+    edges = [(i, j, w[i, j]) for i in range(n) for j in range(i) if w[i, j] != 0]
+    # initial params (gamma_1..gamma_p, beta_1..beta_p)
+    params = torch.randn(2 * p, dtype=torch.double) * init_std
+    params.requires_grad = False  # we will supply grads manually using finite differences
+    optimizer = torch.optim.Adam([params], lr=lr)
+    backend = Aer.get_backend(backend_name)
+    best = {"val": -np.inf, "params": None, "bitstring": None}
+
+    for it in range(maxiter):
+        # unpack
+        gammas = params.detach().numpy()[:p]
+        betas = params.detach().numpy()[p:]
+        # build circuit, get statevector
+        qc = qaoa_circuit(n, edges, gammas, betas)
+        qc.save_statevector()
+        # using Aer simulator
+        res = backend.run(qc).result()
+        sv = res.get_statevector(qc)
+        # compute expectation (we maximize expected cut)
+        exp_val = expectation_from_statevector(sv, w)
+        loss = -float(exp_val)  # minimize negative of expectation
+
+        # keep best
+        if exp_val > best["val"]:
+            # extract most likely bitstring
+            probs = Statevector(sv).probabilities_dict()
+            most = max(probs.items(), key=lambda kv: kv[1])[0]
+            bits = np.array([int(b) for b in most[::-1]])
+            best.update({"val": exp_val, "params": params.detach().clone(), "bitstring": bits})
+
+        # finite-difference gradient (central difference)
+        grads = np.zeros_like(params.detach().numpy())
+        base = params.detach().numpy()
+        eps = finite_diff_eps
+        for k in range(len(base)):
+            plus = base.copy()
+            minus = base.copy()
+            plus[k] += eps
+            minus[k] -= eps
+            g_plus = _qaoa_expectation_with_params(plus, n, edges, backend, w, p)
+            g_minus = _qaoa_expectation_with_params(minus, n, edges, backend, w, p)
+            grad_k = (-(g_plus - g_minus) / (2 * eps))  # derivative of loss = -expectation
+            grads[k] = grad_k
+
+        # set grads into params manually and step optimizer
+        params_grad = torch.from_numpy(grads).to(dtype=torch.double)
+        params.grad = params_grad
+        optimizer.step()
+        optimizer.zero_grad()
+
+        if it % 10 == 0 or it == maxiter - 1:
+            print(f"Iter {it:03d}: expected cut = {exp_val:.6f}, loss = {loss:.6f}")
+
+    return best
+
+
+def _qaoa_expectation_with_params(flat_params, n, edges, backend, w, p):
+    """Helper to evaluate expected cut quickly for given params (no PyTorch)"""
+    gammas = flat_params[:p]
+    betas = flat_params[p:]
+    qc = qaoa_circuit(n, edges, gammas, betas)
+    qc.save_statevector()
+    res = backend.run(qc).result()
+    sv = res.get_statevector(qc)
+    exp_val = expectation_from_statevector(sv, w)
+    return exp_val
+
+
+# -------------------------
+# Circuit display helpers
+# -------------------------
+def show_circuit(qc: QuantumCircuit, filename: str = None, style: str = "mpl"):
+    print("\n--- Quantum Circuit ---")
+    try:
+        print(qc.draw(output="text"))
+    except Exception as e:
+        print("Failed to draw Quantum Circuit:", e)
+    if style == "mpl":
+        try:
+            fig = qc.draw(output="mpl", interactive=False)
+            fig.tight_layout()
+            if filename:
+                fig.savefig(filename, dpi=200, bbox_inches="tight")
+                print(f"[Saved circuit figure to {filename}]")
+            else:
+                # if no filename provided, still save to a temporary PNG and show inline if possible
+                tempname = "qaoa_circuit.png"
+                fig.savefig(tempname, dpi=200, bbox_inches="tight")
+                print(f"[Saved circuit figure to {tempname}]")
+            plt.close(fig)
+        except Exception as e:
+            print("Matplotlib drawing failed:", str(e))
+            print("Fallback: Quantum Circuit diagram above.")
+
+
+def demo_display_initial_circuit(w, p=1, filename="qaoa_initial_circuit.png"):
+    n = w.shape[0]
+    # random params for demo
+    gammas = np.random.randn(p) * 0.8
+    betas = np.random.randn(p) * 0.8
+    edges = [(i, j, w[i, j]) for i in range(n) for j in range(i) if w[i, j] != 0]
+    qc = qaoa_circuit(n, edges, gammas, betas)
+    show_circuit(qc, filename=filename, style="mpl")
+
+
+def demo_display_best_circuit(w, best_params, p=1, filename="qaoa_best_circuit.png"):
+    n = w.shape[0]
+    if isinstance(best_params, torch.Tensor):
+        flat = best_params.detach().cpu().numpy()
+    else:
+        flat = np.array(best_params)
+    gammas = flat[:p]
+    betas = flat[p:]
+    edges = [(i, j, w[i, j]) for i in range(n) for j in range(i) if w[i, j] != 0]
+    qc = qaoa_circuit(n, edges, gammas, betas)
+    show_circuit(qc, filename=filename, style="mpl")
+
+
+# -------------------------
+# Run example
+# -------------------------
+if __name__ == "__main__":
+    G, w = make_graph()
+    print("Graph edges:", list(G.edges()))
+    bf_x, bf_val = brute_force_maxcut(w)
+    print("Brute-force best:", bf_x, "value:", bf_val)
+    # show an initial example circuit (random parameters)
+    demo_display_initial_circuit(w, p=1, filename="qaoa_initial_circuit.png")
+    # run QAOA p=1 (toy)
+    best = run_qaoa_with_pytorch(w, p=1, init_std=0.8, maxiter=80, lr=0.2, finite_diff_eps=1e-3)
+    print("QAOA best expected value:", best["val"])
+    print("Most-likely bitstring found:", best["bitstring"])
+    # evaluate most-likely bitstring exactly
+    exact_val = objective_value(best["bitstring"], w)
+    print("Exact value of that bitstring:", exact_val)
+    # Display the optimized circuit using the best parameters (and save)
+    if best["params"] is not None:
+        demo_display_best_circuit(w, best["params"], p=1, filename="qaoa_best_circuit.png")
+    else:
+        print("No best params found to display.")
+
+     
+Graph edges: [(0, 1), (0, 2), (1, 2), (1, 3), (2, 3)]
+Brute-force best: [0 1 1 0] value: 4
+
+--- Quantum Circuit ---
+     ┌───┐┌───┐┌─────────────┐┌───┐┌───┐┌─────────────┐┌───┐┌─────────────┐»
+q_0: ┤ H ├┤ X ├┤ Rz(0.75973) ├┤ X ├┤ X ├┤ Rz(0.75973) ├┤ X ├┤ Rx(-1.4587) ├»
+     ├───┤└─┬─┘└─────────────┘└─┬─┘└─┬─┘└─────────────┘└─┬─┘└────┬───┬────┘»
+q_1: ┤ H ├──■───────────────────■────┼───────────────────┼───────┤ X ├─────»
+     ├───┤                           │                   │       └─┬─┘     »
+q_2: ┤ H ├───────────────────────────■───────────────────■─────────■───────»
+     ├───┤                                                                 »
+q_3: ┤ H ├─────────────────────────────────────────────────────────────────»
+     └───┘                                                                 »
+«                                                                 »
+«q_0: ────────────────────────────────────────────────────────────»
+«     ┌─────────────┐┌───┐┌───┐┌─────────────┐┌───┐┌─────────────┐»
+«q_1: ┤ Rz(0.75973) ├┤ X ├┤ X ├┤ Rz(0.75973) ├┤ X ├┤ Rx(-1.4587) ├»
+«     └─────────────┘└─┬─┘└─┬─┘└─────────────┘└─┬─┘└────┬───┬────┘»
+«q_2: ─────────────────■────┼───────────────────┼───────┤ X ├─────»
+«                           │                   │       └─┬─┘     »
+«q_3: ──────────────────────■───────────────────■─────────■───────»
+«                                                                 »
+«                                        
+«q_0: ───────────────────────────────────
+«                                        
+«q_1: ───────────────────────────────────
+«     ┌─────────────┐┌───┐┌─────────────┐
+«q_2: ┤ Rz(0.75973) ├┤ X ├┤ Rx(-1.4587) ├
+«     └─────────────┘└─┬─┘├─────────────┤
+«q_3: ─────────────────■──┤ Rx(-1.4587) ├
+«                         └─────────────┘
+[Saved circuit figure to qaoa_initial_circuit.png]
+Iter 000: expected cut = 1.475239, loss = -1.475239
+Iter 010: expected cut = 3.177574, loss = -3.177574
+Iter 020: expected cut = 3.124134, loss = -3.124134
+Iter 030: expected cut = 3.197728, loss = -3.197728
+Iter 040: expected cut = 3.231593, loss = -3.231593
+Iter 050: expected cut = 3.236474, loss = -3.236474
+Iter 060: expected cut = 3.236554, loss = -3.236554
+Iter 070: expected cut = 3.236823, loss = -3.236823
+Iter 079: expected cut = 3.237019, loss = -3.237019
+QAOA best expected value: 3.2370929792989784
+Most-likely bitstring found: [1 0 0 1]
+Exact value of that bitstring: 4
+
+--- Quantum Circuit ---
+     ┌───┐┌───┐┌─────────────┐┌───┐┌───┐┌─────────────┐┌───┐┌────────────┐»
+q_0: ┤ H ├┤ X ├┤ Rz(0.56866) ├┤ X ├┤ X ├┤ Rz(0.56866) ├┤ X ├┤ Rx(2.5182) ├»
+     ├───┤└─┬─┘└─────────────┘└─┬─┘└─┬─┘└─────────────┘└─┬─┘└───┬───┬────┘»
+q_1: ┤ H ├──■───────────────────■────┼───────────────────┼──────┤ X ├─────»
+     ├───┤                           │                   │      └─┬─┘     »
+q_2: ┤ H ├───────────────────────────■───────────────────■────────■───────»
+     ├───┤                                                                »
+q_3: ┤ H ├────────────────────────────────────────────────────────────────»
+     └───┘                                                                »
+«                                                                »
+«q_0: ───────────────────────────────────────────────────────────»
+«     ┌─────────────┐┌───┐┌───┐┌─────────────┐┌───┐┌────────────┐»
+«q_1: ┤ Rz(0.56866) ├┤ X ├┤ X ├┤ Rz(0.56866) ├┤ X ├┤ Rx(2.5182) ├»
+«     └─────────────┘└─┬─┘└─┬─┘└─────────────┘└─┬─┘└───┬───┬────┘»
+«q_2: ─────────────────■────┼───────────────────┼──────┤ X ├─────»
+«                           │                   │      └─┬─┘     »
+«q_3: ──────────────────────■───────────────────■────────■───────»
+«                                                                »
+«                                       
+«q_0: ──────────────────────────────────
+«                                       
+«q_1: ──────────────────────────────────
+«     ┌─────────────┐┌───┐┌────────────┐
+«q_2: ┤ Rz(0.56866) ├┤ X ├┤ Rx(2.5182) ├
+«     └─────────────┘└─┬─┘├────────────┤
+«q_3: ─────────────────■──┤ Rx(2.5182) ├
+«                         └────────────┘
+[Saved circuit figure to qaoa_best_circuit.png]
+4. Result
+The QAOA implementation successfully demonstrates a hybrid quantum-classical optimization approach to solving the Max-Cut problem. The algorithm constructs a quantum circuit with tunable parameters 
+, optimizes them using classical gradient descent, and converges to a near-optimal cut value. Simulation results confirmed that QAOA achieves close-to-optimal solutions for small graphs, validating its potential as an efficient heuristic for NP-hard combinatorial problems.
