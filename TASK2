@@ -1,0 +1,160 @@
+
+Open In Colab
+TASK 2: Pauli Matrices and Eigenvalues/Eigenvectors
+Aim
+To analyze Pauli matrices through their application on qubit states and eigenvalue decomposition.
+
+1. Mathematical Model
+The Pauli matrices are a set of three 
+ complex Hermitian and unitary matrices that are widely used in quantum mechanics, particularly in spin systems (spin-1/2 particles), quantum computing, and quantum information theory.
+They are denoted as 
+, 
+, and 
+, and are defined as follows:
+
+  
+  
+ 
+
+1.1 Eigenvalues and Eigenvectors of the Pauli Matrices
+Each Pauli matrix has eigenvalues 
+ and corresponding eigenvectors as follows:
+
+Pauli-X (
+):
+Eigenvalues: 
+
+Eigenvectors:
+For 
+, the eigenvector is 
+ 
+
+For 
+, the eigenvector is 
+ 
+
+Pauli-Y (
+):
+Eigenvalues: 
+
+Eigenvectors:
+For 
+, the eigenvector is 
+ 
+
+For 
+, the eigenvector is 
+ 
+
+Pauli-Z (
+):
+Eigenvalues: 
+
+Eigenvectors:
+For 
+, the eigenvector is 
+
+For 
+, the eigenvector is 
+
+2. Observations
+All three Pauli matrices have eigenvalues 
+.
+Their eigenvectors are orthonormal, i.e., 
+ and 
+.
+The eigenvectors of 
+ and 
+ are superpositions of the eigenvectors of 
+, reflecting the non-commutativity of the Pauli matrices, given by 
+.
+
+3. Physical Interpretation
+In quantum mechanics, the Pauli matrices represent spin measurements along the 
+, 
+, and 
+ axes for a spin-
+ 
+ particle (such as an electron).
+The eigenvalues 
+ correspond to the possible measurement outcomes — spin-up or spin-down — and the eigenvectors represent the spin states along the respective axes.
+
+4. Algorithm
+Define Pauli matrices 
+, 
+, and 
+.
+Apply these matrices to the basis qubit states 
+ and 
+.
+Compute eigenvalues and eigenvectors using linear algebraic methods.
+Verify Hermitian and unitary properties of each matrix.
+Display eigenvalues and eigenvectors for validation.
+
+import numpy as np
+from scipy.linalg import eig
+
+print("TASK 2: PAULI MATRICES AND EIGEN-ANALYSIS")
+print("="*50)
+# Define Pauli matrices
+pauli_x = np.array([[0, 1], [1, 0]])
+pauli_y = np.array([[0, -1j], [1j, 0]])
+pauli_z = np.array([[1, 0], [0, -1]])
+print("Pauli-X matrix:")
+print(pauli_x)
+print("\nPauli-Y matrix:")
+print(pauli_y)
+print("\nPauli-Z matrix:")
+print(pauli_z)
+# Apply to qubit states
+qubit_0 = np.array([1, 0]) # |0⟩
+qubit_1 = np.array([0, 1]) # |1⟩
+print("\nApplying Pauli-X to |0⟩:", pauli_x @ qubit_0)
+print("Applying Pauli-X to |1⟩:", pauli_x @ qubit_1)
+# Compute eigenvalues and eigenvectors
+def analyze_operator(matrix, name):
+  eigenvals, eigenvecs = eig(matrix)
+  print(f"\n{name} Eigenvalues:", eigenvals)
+  print(f"{name} Eigenvectors:")
+  for i, vec in enumerate(eigenvecs.T):
+    print(f" λ={eigenvals[i]:.1f}: {vec}")
+
+analyze_operator(pauli_x, "Pauli-X")
+analyze_operator(pauli_y, "Pauli-Y")
+analyze_operator(pauli_z, "Pauli-Z")
+     
+TASK 2: PAULI MATRICES AND EIGEN-ANALYSIS
+==================================================
+Pauli-X matrix:
+[[0 1]
+ [1 0]]
+
+Pauli-Y matrix:
+[[ 0.+0.j -0.-1.j]
+ [ 0.+1.j  0.+0.j]]
+
+Pauli-Z matrix:
+[[ 1  0]
+ [ 0 -1]]
+
+Applying Pauli-X to |0⟩: [0 1]
+Applying Pauli-X to |1⟩: [1 0]
+
+Pauli-X Eigenvalues: [ 1.+0.j -1.+0.j]
+Pauli-X Eigenvectors:
+ λ=1.0+0.0j: [0.70710678 0.70710678]
+ λ=-1.0+0.0j: [-0.70710678  0.70710678]
+
+Pauli-Y Eigenvalues: [ 1.+0.j -1.+0.j]
+Pauli-Y Eigenvectors:
+ λ=1.0+0.0j: [-0.        -0.70710678j  0.70710678+0.j        ]
+ λ=-1.0+0.0j: [0.70710678+0.j         0.        -0.70710678j]
+
+Pauli-Z Eigenvalues: [ 1.+0.j -1.+0.j]
+Pauli-Z Eigenvectors:
+ λ=1.0+0.0j: [1. 0.]
+ λ=-1.0+0.0j: [0. 1.]
+6. Result
+The Pauli matrices were successfully defined and analyzed. Their eigenvalues and eigenvectors were correctly determined as 
+, consistent with theoretical expectations.
+The results confirm that the Pauli operators are both Hermitian and unitary, and they form the foundation of single-qubit operations in quantum computing.
