@@ -1,0 +1,244 @@
+
+Open In Colab
+TASK 5: CNOT Gate and Quantum Teleportation
+Aim
+To implement, simulate, and verify the functionality of the Controlled-NOT (CNOT) gate and demonstrate the quantum teleportation protocol using Qiskit.
+
+1. Mathematical Model of the CNOT Gate
+The Controlled-NOT (CNOT) gate is a two-qubit gate where the second qubit (target) is flipped only when the first qubit (control) is in state 
+.
+It performs the following transformations:
+
+The CNOT gate is used in quantum circuits for entanglement generation and error correction mechanisms.
+
+2. Mathematical Model of Quantum Teleportation
+The quantum teleportation protocol allows transmission of an unknown quantum state from one qubit to another distant qubit using entanglement and classical communication.
+The general steps include:
+
+Preparation of Entanglement:
+An entangled Bell pair 
+ is created between the sender (Alice) and the receiver (Bob).
+
+Bell Measurement:
+Alice performs a joint measurement on her qubits to project them onto one of the Bell states.
+
+Classical Communication:
+Alice sends the two classical bits from her measurement results to Bob.
+
+Unitary Operations:
+Based on the received bits, Bob applies corrective operations (
+, 
+, 
+, or 
+) to recover the original quantum state.
+
+Mathematically, the teleportation process transfers an arbitrary state 
+ from Alice’s qubit to Bob’s qubit without physically sending the qubit itself.
+
+3. Algorithm – CNOT Gate and Quantum Teleportation
+Initialize three qubits:
+
+Qubit 0 holds the state to be teleported.
+Qubits 1 and 2 form an entangled Bell pair.
+Apply a Hadamard (H) gate to qubit 1 and a CNOT gate between qubits 1 (control) and 2 (target) to generate entanglement.
+
+Apply CNOT between qubits 0 (control) and 1 (target), followed by a Hadamard (H) gate on qubit 0.
+
+Measure the first two qubits and send the classical outcomes to the receiver.
+
+Apply corrective gates on qubit 2 according to the classical results:
+
+If the first bit is 1, apply 
+.
+If the second bit is 1, apply 
+.
+Verify that the final state of qubit 2 matches the original input state 
+.
+
+
+!pip install qiskit
+!pip install qiskit_aer
+!pip install matplotlib
+from qiskit import QuantumCircuit
+from qiskit_aer import Aer
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+def cnot_circuit(input_state):
+ """
+ Creates and simulates a CNOT circuit for a given input
+state.
+ Args:
+ input_state (str): '00', '01', '10', or '11'
+ """
+ qc = QuantumCircuit(2, 2) # 2 qubits, 2 classical bits
+ # Prepare input state
+ if input_state[0] == '1':
+  qc.x(0) # Set q0 to |1⟩
+ if input_state[1] == '1':
+  qc.x(1) # Set q1 to |1⟩
+ # Apply CNOT (q0=control, q1=target)
+ qc.cx(0, 1)
+ # Measure qubits
+ qc.measure([0, 1], [0, 1])
+ # Simulate
+ simulator = Aer.get_backend('qasm_simulator')
+ result = simulator.run(qc, shots=1000).result()
+ counts = result.get_counts(qc)
+ # Plot results
+ print(f"\nCNOT Gate Test | Input: |{input_state}⟩")
+ print("Circuit Diagram:")
+ print(qc.draw(output='text'))
+ plot_histogram(counts)
+ plt.show()
+# Test all possible inputs
+for state in ['00', '01', '10', '11']:
+ cnot_circuit(state)
+     
+Collecting qiskit
+  Downloading qiskit-2.1.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)
+Collecting rustworkx>=0.15.0 (from qiskit)
+  Downloading rustworkx-0.17.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (10 kB)
+Requirement already satisfied: numpy<3,>=1.17 in /usr/local/lib/python3.11/dist-packages (from qiskit) (2.0.2)
+Requirement already satisfied: scipy>=1.5 in /usr/local/lib/python3.11/dist-packages (from qiskit) (1.16.1)
+Requirement already satisfied: dill>=0.3 in /usr/local/lib/python3.11/dist-packages (from qiskit) (0.3.8)
+Collecting stevedore>=3.0.0 (from qiskit)
+  Downloading stevedore-5.4.1-py3-none-any.whl.metadata (2.3 kB)
+Requirement already satisfied: typing-extensions in /usr/local/lib/python3.11/dist-packages (from qiskit) (4.14.1)
+Collecting pbr>=2.0.0 (from stevedore>=3.0.0->qiskit)
+  Downloading pbr-7.0.0-py2.py3-none-any.whl.metadata (1.4 kB)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.11/dist-packages (from pbr>=2.0.0->stevedore>=3.0.0->qiskit) (75.2.0)
+Downloading qiskit-2.1.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (7.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.5/7.5 MB 26.0 MB/s eta 0:00:00
+Downloading rustworkx-0.17.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 61.2 MB/s eta 0:00:00
+Downloading stevedore-5.4.1-py3-none-any.whl (49 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 49.5/49.5 kB 3.6 MB/s eta 0:00:00
+Downloading pbr-7.0.0-py2.py3-none-any.whl (125 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.1/125.1 kB 8.8 MB/s eta 0:00:00
+Installing collected packages: rustworkx, pbr, stevedore, qiskit
+Successfully installed pbr-7.0.0 qiskit-2.1.1 rustworkx-0.17.1 stevedore-5.4.1
+Collecting qiskit_aer
+  Downloading qiskit_aer-0.17.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (8.3 kB)
+Requirement already satisfied: qiskit>=1.1.0 in /usr/local/lib/python3.11/dist-packages (from qiskit_aer) (2.1.1)
+Requirement already satisfied: numpy>=1.16.3 in /usr/local/lib/python3.11/dist-packages (from qiskit_aer) (2.0.2)
+Requirement already satisfied: scipy>=1.0 in /usr/local/lib/python3.11/dist-packages (from qiskit_aer) (1.16.1)
+Requirement already satisfied: psutil>=5 in /usr/local/lib/python3.11/dist-packages (from qiskit_aer) (5.9.5)
+Requirement already satisfied: python-dateutil>=2.8.0 in /usr/local/lib/python3.11/dist-packages (from qiskit_aer) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.0->qiskit_aer) (1.17.0)
+Requirement already satisfied: rustworkx>=0.15.0 in /usr/local/lib/python3.11/dist-packages (from qiskit>=1.1.0->qiskit_aer) (0.17.1)
+Requirement already satisfied: dill>=0.3 in /usr/local/lib/python3.11/dist-packages (from qiskit>=1.1.0->qiskit_aer) (0.3.8)
+Requirement already satisfied: stevedore>=3.0.0 in /usr/local/lib/python3.11/dist-packages (from qiskit>=1.1.0->qiskit_aer) (5.4.1)
+Requirement already satisfied: typing-extensions in /usr/local/lib/python3.11/dist-packages (from qiskit>=1.1.0->qiskit_aer) (4.14.1)
+Requirement already satisfied: pbr>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from stevedore>=3.0.0->qiskit>=1.1.0->qiskit_aer) (7.0.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.11/dist-packages (from pbr>=2.0.0->stevedore>=3.0.0->qiskit>=1.1.0->qiskit_aer) (75.2.0)
+Downloading qiskit_aer-0.17.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 49.3 MB/s eta 0:00:00
+Installing collected packages: qiskit_aer
+Successfully installed qiskit_aer-0.17.1
+Requirement already satisfied: matplotlib in /usr/local/lib/python3.11/dist-packages (3.10.0)
+Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (4.59.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (1.4.9)
+Requirement already satisfied: numpy>=1.23 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (2.0.2)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (25.0)
+Requirement already satisfied: pillow>=8 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (11.3.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (3.2.3)
+Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.11/dist-packages (from matplotlib) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.7->matplotlib) (1.17.0)
+
+CNOT Gate Test | Input: |00⟩
+Circuit Diagram:
+          ┌─┐   
+q_0: ──■──┤M├───
+     ┌─┴─┐└╥┘┌─┐
+q_1: ┤ X ├─╫─┤M├
+     └───┘ ║ └╥┘
+c: 2/══════╩══╩═
+           0  1 
+
+CNOT Gate Test | Input: |01⟩
+Circuit Diagram:
+               ┌─┐   
+q_0: ───────■──┤M├───
+     ┌───┐┌─┴─┐└╥┘┌─┐
+q_1: ┤ X ├┤ X ├─╫─┤M├
+     └───┘└───┘ ║ └╥┘
+c: 2/═══════════╩══╩═
+                0  1 
+
+CNOT Gate Test | Input: |10⟩
+Circuit Diagram:
+     ┌───┐     ┌─┐   
+q_0: ┤ X ├──■──┤M├───
+     └───┘┌─┴─┐└╥┘┌─┐
+q_1: ─────┤ X ├─╫─┤M├
+          └───┘ ║ └╥┘
+c: 2/═══════════╩══╩═
+                0  1 
+
+CNOT Gate Test | Input: |11⟩
+Circuit Diagram:
+     ┌───┐     ┌─┐   
+q_0: ┤ X ├──■──┤M├───
+     ├───┤┌─┴─┐└╥┘┌─┐
+q_1: ┤ X ├┤ X ├─╫─┤M├
+     └───┘└───┘ ║ └╥┘
+c: 2/═══════════╩══╩═
+                0  1 
+
+from qiskit import QuantumCircuit
+from qiskit_aer import Aer
+from qiskit.visualization import plot_histogram
+import matplotlib.pyplot as plt
+# Create circuit
+qc = QuantumCircuit(3, 2) # 3 qubits, 2 classical bits
+# Step 1: Prepare Alice's state (|1⟩ for demo)
+qc.x(0) # Comment out to teleport |0⟩
+qc.barrier()
+# Step 2: Create Bell pair (q1 & q2)
+qc.h(1)
+qc.cx(1, 2)
+qc.barrier()
+# Step 3: Teleportation protocol
+qc.cx(0, 1)
+qc.h(0)
+qc.barrier()
+# Step 4: Measure Alice's qubits
+qc.measure([0,1], [0,1])
+qc.barrier()
+# Step 5: Bob's corrections
+qc.cx(1, 2) # X if c1=1
+qc.cz(0, 2) # Z if c0=1
+# Step 6: Measure Bob's qubit
+qc.measure(2, 0) # Overwrite c0 for verification
+# Draw circuit
+print("Teleportation Circuit:")
+print(qc.draw(output='text'))
+# Simulate
+simulator = Aer.get_backend('qasm_simulator')
+result = simulator.run(qc, shots=1000).result()
+counts = result.get_counts(qc)
+# Results
+print("\nMeasurement results:")
+print(counts)
+plot_histogram(counts)
+plt.show()
+     
+Teleportation Circuit:
+     ┌───┐ ░            ░      ┌───┐ ░ ┌─┐    ░            
+q_0: ┤ X ├─░────────────░───■──┤ H ├─░─┤M├────░───────■────
+     └───┘ ░ ┌───┐      ░ ┌─┴─┐└───┘ ░ └╥┘┌─┐ ░       │    
+q_1: ──────░─┤ H ├──■───░─┤ X ├──────░──╫─┤M├─░───■───┼────
+           ░ └───┘┌─┴─┐ ░ └───┘      ░  ║ └╥┘ ░ ┌─┴─┐ │ ┌─┐
+q_2: ──────░──────┤ X ├─░────────────░──╫──╫──░─┤ X ├─■─┤M├
+           ░      └───┘ ░            ░  ║  ║  ░ └───┘   └╥┘
+c: 2/═══════════════════════════════════╩══╩═════════════╩═
+                                        0  1             0 
+
+Measurement results:
+{'01': 487, '11': 513}
+4. Result
+The experiment successfully demonstrated the implementation, simulation, and verification of the CNOT gate using Qiskit, followed by the construction of a complete quantum teleportation protocol. The simulation validated the correct operation of the CNOT gate by observing the expected transformations of all possible input states.
+
+The quantum teleportation circuit accurately transferred an arbitrary quantum state from Alice to Bob using entanglement and classical communication. The results confirm that the protocol enables the faithful reconstruction of the original qubit at Bob’s end, illustrating one of the most fundamental applications of quantum information theory.
