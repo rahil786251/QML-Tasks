@@ -1,0 +1,192 @@
+
+Open In Colab
+TASK 8: Grover’s Algorithm for a 3-Qubit Database
+Aim
+To implement Grover’s quantum search algorithm for a 3-qubit search space (8 items) using Cirq, and demonstrate that the marked item (target state) can be found with high probability after the optimal number of iterations.
+
+1. Mathematical Model of Grover’s Algorithm for a 3-Qubit Database
+Database size:
+Search space ( N = 2^3 = 8 ) elements represented by 3-qubit basis states
+( {,
+} ).
+
+Target:
+A basis state ( 
+ ), here chosen as ( 
+).
+
+Initial State:
+Equal superposition ( |S\rangle = \frac{1}{\sqrt{N}} \sum_{x=0}^{N-1} |x\rangle = \frac{1}{\sqrt{8}} \sum_{x=0}^{7} 
+ ),
+created by applying Hadamard gates on all 3 qubits.
+
+Oracle:
+( f(x) = 1 ) if ( x = x' ) (the marked target), and ( 0 ) otherwise.
+
+Diffusion Operator:
+Inversion about the mean, realized by Hadamard gates, X gates, multi-controlled Z, and reversing these gates.
+
+Grover Operator:
+( G = D \cdot O )
+
+Grover Iterations:
+Apply the oracle and diffusion operator approximately
+( r = 
+ 
+ 
+ ) times to amplify the amplitude of the marked state.
+For ( N = 8 ) and ( M = 1 ), ( r = 2 ).
+
+Measurement:
+Measurement of all qubits follows the iterations, producing bit strings with probability concentrated on the marked state.
+
+2. Algorithm – Grover’s Algorithm for a 3-Qubit Database
+Initialize 3 qubits to (
+).
+Create a uniform superposition by applying Hadamard gates ( H^
+ ).
+Repeat ( k = 2 ) times:
+Apply the oracle, marking the target bit string with a phase flip on the marked state.
+Apply the diffusion operator (inversion about the mean).
+Measure all qubits to obtain results peaked at the target state with high probability.
+
+!pip install cirq
+import cirq
+import numpy as np
+import matplotlib.pyplot as plt
+def grover_3_qubit(target_binary):
+ qubits = [cirq.GridQubit(0, i) for i in range(3)]
+ circuit = cirq.Circuit()
+
+ circuit.append(cirq.H.on_each(*qubits))
+
+ N = 2 ** 3
+ iterations = int(np.floor(np.pi/4 * np.sqrt(N)))
+ for iteration in range(iterations):
+ # Oracle
+  apply_oracle(circuit, qubits, target_binary)
+
+  apply_diffusion(circuit, qubits)
+
+ circuit.append(cirq.measure(*qubits, key='result'))
+ return circuit, qubits
+def apply_oracle(circuit, qubits, target_binary):
+ # Apply X gates where target bit is 0
+ for i, bit in enumerate(target_binary):
+  if bit == '0':
+    circuit.append(cirq.X(qubits[i]))
+ # Multi-controlled Z using H and CCX
+ circuit.append(cirq.H(qubits[-1]))
+ circuit.append(cirq.CCX(qubits[0], qubits[1], qubits[2]))
+ circuit.append(cirq.H(qubits[-1]))
+ # Undo X gates
+ for i, bit in enumerate(target_binary):
+  if bit == '0':
+    circuit.append(cirq.X(qubits[i]))
+def apply_diffusion(circuit, qubits):
+ circuit.append(cirq.H.on_each(*qubits))
+ circuit.append(cirq.X.on_each(*qubits))
+ circuit.append(cirq.H(qubits[-1]))
+ circuit.append(cirq.CCX(qubits[0], qubits[1], qubits[2]))
+ circuit.append(cirq.H(qubits[-1]))
+ circuit.append(cirq.X.on_each(*qubits))
+ circuit.append(cirq.H.on_each(*qubits))
+def analyze_results(counts, target):
+ total = sum(counts.values())
+ success = counts.get(int(target, 2), 0)
+ success_rate = success / total * 100
+ print(f"Measurement results for target |{target}>:")
+ for state in range(8):
+  bitstr = format(state, '03b')
+  count = counts.get(state, 0)
+  pct = count / total * 100
+  marker = "<-- Target" if bitstr == target else ""
+  print(f"State |{bitstr}>: {count} times ({pct:.2f}%) {marker}")
+ print(f"\nSuccess rate: {success_rate:.2f}% (optimal ~94% after 2 iterations)")
+ states = [format(i, '03b') for i in range(8)]
+ values = [counts.get(i, 0) for i in range(8)]
+ colors = ['red' if s == target else 'blue' for s in states]
+ plt.bar(states, values, color=colors)
+ plt.title(f"Grover's Algorithm Results (Target: |{target}>)")
+ plt.xlabel("States")
+ plt.ylabel("Counts")
+ plt.show()
+if __name__ == "__main__":
+ target = "101"
+ circuit, qubits = grover_3_qubit(target)
+ print("Circuit diagram:")
+ print(circuit)
+ simulator = cirq.Simulator()
+ result = simulator.run(circuit, repetitions=1000)
+ counts = result.histogram(key='result')
+ analyze_results(counts, target)
+     
+Requirement already satisfied: cirq in /usr/local/lib/python3.12/dist-packages (1.6.1)
+Requirement already satisfied: cirq-aqt==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: cirq-core==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: cirq-google==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: cirq-ionq==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: cirq-pasqal==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: cirq-web==1.6.1 in /usr/local/lib/python3.12/dist-packages (from cirq) (1.6.1)
+Requirement already satisfied: requests~=2.32 in /usr/local/lib/python3.12/dist-packages (from cirq-aqt==1.6.1->cirq) (2.32.4)
+Requirement already satisfied: attrs>=21.3.0 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (25.3.0)
+Requirement already satisfied: duet>=0.2.8 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (0.2.9)
+Requirement already satisfied: matplotlib~=3.8 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (3.10.0)
+Requirement already satisfied: networkx~=3.4 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (3.5)
+Requirement already satisfied: numpy>=1.26 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (2.0.2)
+Requirement already satisfied: pandas~=2.1 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (2.2.2)
+Requirement already satisfied: sortedcontainers~=2.0 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (2.4.0)
+Requirement already satisfied: scipy~=1.12 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (1.16.1)
+Requirement already satisfied: sympy in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (1.13.3)
+Requirement already satisfied: typing_extensions>=4.2 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (4.15.0)
+Requirement already satisfied: tqdm>=4.12 in /usr/local/lib/python3.12/dist-packages (from cirq-core==1.6.1->cirq) (4.67.1)
+Requirement already satisfied: google-api-core~=2.22 in /usr/local/lib/python3.12/dist-packages (from google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (2.25.1)
+Requirement already satisfied: proto-plus~=1.25 in /usr/local/lib/python3.12/dist-packages (from cirq-google==1.6.1->cirq) (1.26.1)
+Requirement already satisfied: protobuf<6.0dev,>=5.26.1 in /usr/local/lib/python3.12/dist-packages (from cirq-google==1.6.1->cirq) (5.29.5)
+Requirement already satisfied: typedunits in /usr/local/lib/python3.12/dist-packages (from cirq-google==1.6.1->cirq) (0.0.1.dev20250903181955)
+Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.56.2 in /usr/local/lib/python3.12/dist-packages (from google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (1.70.0)
+Requirement already satisfied: google-auth<3.0.0,>=2.14.1 in /usr/local/lib/python3.12/dist-packages (from google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (2.38.0)
+Requirement already satisfied: grpcio<2.0.0,>=1.33.2 in /usr/local/lib/python3.12/dist-packages (from google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (1.74.0)
+Requirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in /usr/local/lib/python3.12/dist-packages (from google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (1.71.2)
+Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (4.59.2)
+Requirement already satisfied: kiwisolver>=1.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (1.4.9)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (25.0)
+Requirement already satisfied: pillow>=8 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (11.3.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (3.2.3)
+Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.12/dist-packages (from matplotlib~=3.8->cirq-core==1.6.1->cirq) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.12/dist-packages (from pandas~=2.1->cirq-core==1.6.1->cirq) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.12/dist-packages (from pandas~=2.1->cirq-core==1.6.1->cirq) (2025.2)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.12/dist-packages (from requests~=2.32->cirq-aqt==1.6.1->cirq) (3.4.3)
+Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.12/dist-packages (from requests~=2.32->cirq-aqt==1.6.1->cirq) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.12/dist-packages (from requests~=2.32->cirq-aqt==1.6.1->cirq) (2.5.0)
+Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.12/dist-packages (from requests~=2.32->cirq-aqt==1.6.1->cirq) (2025.8.3)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.12/dist-packages (from sympy->cirq-core==1.6.1->cirq) (1.3.0)
+Requirement already satisfied: cython>=3.0.0 in /usr/local/lib/python3.12/dist-packages (from typedunits->cirq-google==1.6.1->cirq) (3.0.12)
+Requirement already satisfied: cachetools<6.0,>=2.0.0 in /usr/local/lib/python3.12/dist-packages (from google-auth<3.0.0,>=2.14.1->google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (5.5.2)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /usr/local/lib/python3.12/dist-packages (from google-auth<3.0.0,>=2.14.1->google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (0.4.2)
+Requirement already satisfied: rsa<5,>=3.1.4 in /usr/local/lib/python3.12/dist-packages (from google-auth<3.0.0,>=2.14.1->google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (4.9.1)
+Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.12/dist-packages (from python-dateutil>=2.7->matplotlib~=3.8->cirq-core==1.6.1->cirq) (1.17.0)
+Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in /usr/local/lib/python3.12/dist-packages (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.14.1->google-api-core~=2.22->google-api-core[grpc]~=2.22->cirq-google==1.6.1->cirq) (0.6.1)
+Circuit diagram:
+(0, 0): ───H───────@───H───X───────────@───X───H───────────@───H───X───────────@───X───H───────M('result')───
+                   │                   │                   │                   │               │
+(0, 1): ───H───X───@───X───H───X───────@───X───H───X───────@───X───H───X───────@───X───H───────M─────────────
+                   │                   │                   │                   │               │
+(0, 2): ───H───H───X───H───H───X───H───X───H───X───H───H───X───H───H───X───H───X───H───X───H───M─────────────
+Measurement results for target |101>:
+State |000>: 9 times (0.90%) 
+State |001>: 7 times (0.70%) 
+State |010>: 8 times (0.80%) 
+State |011>: 5 times (0.50%) 
+State |100>: 2 times (0.20%) 
+State |101>: 957 times (95.70%) <-- Target
+State |110>: 5 times (0.50%) 
+State |111>: 7 times (0.70%) 
+
+Success rate: 95.70% (optimal ~94% after 2 iterations)
+
+4 Result
+
+The successful implementation of Grover's algorithm for a 3-qubit database validates the theoretical foundations of quantum search algorithms and provides a practical demonstration of quantum computing potential for solving problems more efficiently than classical computers.
